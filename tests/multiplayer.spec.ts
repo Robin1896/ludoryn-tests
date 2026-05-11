@@ -1,7 +1,5 @@
 import { test, expect, Page } from "@playwright/test";
 
-const BASE = "http://localhost:8080";
-
 // Create a room via lobby, return roomId
 async function joinGame(page: Page, name: string, game = "grub") {
   await page.addInitScript(() => sessionStorage.removeItem("catanja-name"));
@@ -10,17 +8,16 @@ async function joinGame(page: Page, name: string, game = "grub") {
   await expect(page.getByText("Jouw naam")).toBeVisible({ timeout: 5000 });
   await page.getByPlaceholder("Jouw naam...").fill(name);
   await page.getByRole("button", { name: /Bevestigen/i }).click();
-  await expect(page).toHaveURL(new RegExp(`^${BASE}/${game}`), { timeout: 10000 });
+  await expect(page).toHaveURL(new RegExp(`\\/${game}`), { timeout: 10000 });
   return new URL(page.url()).searchParams.get("room") ?? "";
 }
 
 // Join via direct URL by pre-setting name in sessionStorage
 async function joinByUrl(page: Page, roomId: string, name: string, game = "grub") {
-  // First navigate to the app origin to set sessionStorage
-  await page.goto(`${BASE}/`);
+  await page.goto("/");
   await page.evaluate((n) => sessionStorage.setItem("catanja-name", n), name);
   await page.goto(`/${game}?room=${roomId}`);
-  await expect(page).toHaveURL(new RegExp(`^${BASE}/${game}`), { timeout: 8000 });
+  await expect(page).toHaveURL(new RegExp(`\\/${game}`), { timeout: 8000 });
 }
 
 test.describe("Multiplayer flow", () => {

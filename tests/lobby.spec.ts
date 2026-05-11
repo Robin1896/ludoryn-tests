@@ -1,7 +1,5 @@
 import { test, expect } from "@playwright/test";
 
-const BASE = "http://localhost:8080";
-
 test.describe("Lobby", () => {
   test("laadt open tafels sectie", async ({ page }) => {
     await page.goto("/lobby?game=grub");
@@ -32,7 +30,7 @@ test.describe("Lobby", () => {
     await page.getByPlaceholder("Jouw naam...").fill("TestSpeler");
     await page.getByRole("button", { name: /Bevestigen/i }).click();
 
-    await expect(page).toHaveURL(new RegExp(`^${BASE}/grub`), { timeout: 10000 });
+    await expect(page).toHaveURL(/\/grub/, { timeout: 10000 });
     expect(new URL(page.url()).searchParams.get("room")).toBeTruthy();
   });
 
@@ -51,13 +49,13 @@ test.describe("Lobby", () => {
     await expect(p1.getByText("Jouw naam")).toBeVisible({ timeout: 3000 });
     await p1.getByPlaceholder("Jouw naam...").fill("ActiveSpeler1");
     await p1.getByRole("button", { name: /Bevestigen/i }).click();
-    await expect(p1).toHaveURL(new RegExp(`^${BASE}/grub`), { timeout: 10000 });
+    await expect(p1).toHaveURL(/\/grub/, { timeout: 10000 });
 
     const roomId = new URL(p1.url()).searchParams.get("room");
     expect(roomId).toBeTruthy();
 
     // Speler 2 joint
-    await p2.goto(`${BASE}/`);
+    await p2.goto("/");
     await p2.evaluate(() => sessionStorage.setItem("catanja-name", "ActiveSpeler2"));
     await p2.goto(`/grub?room=${roomId}`);
     await p2.waitForTimeout(1000);

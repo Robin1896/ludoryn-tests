@@ -1,7 +1,5 @@
 import { test, expect, Page } from "@playwright/test";
 
-const BASE = "http://localhost:8080";
-
 // Helper: maak een wachtende kamer aan en geef roomId terug
 async function createWaitingRoom(page: Page, name: string): Promise<string> {
   await page.addInitScript(() => sessionStorage.removeItem("catanja-name"));
@@ -10,7 +8,7 @@ async function createWaitingRoom(page: Page, name: string): Promise<string> {
   await expect(page.getByText("Jouw naam")).toBeVisible({ timeout: 3000 });
   await page.getByPlaceholder("Jouw naam...").fill(name);
   await page.getByRole("button", { name: /Bevestigen/i }).click();
-  await expect(page).toHaveURL(new RegExp(`^${BASE}/grub`), { timeout: 10000 });
+  await expect(page).toHaveURL(/\/grub/, { timeout: 10000 });
   return new URL(page.url()).searchParams.get("room") ?? "";
 }
 
@@ -30,7 +28,7 @@ test.describe("Navigatie", () => {
   });
 
   test("spelernaam blijft bewaard na herladen pagina", async ({ page }) => {
-    await page.goto(`${BASE}/`);
+    await page.goto("/");
     await page.evaluate(() => sessionStorage.setItem("catanja-name", "GeheugenTest"));
     await page.goto("/lobby?game=grub");
     await page.reload();
@@ -39,7 +37,7 @@ test.describe("Navigatie", () => {
     // Klik Nieuw — mag NIET de NameModal tonen want naam is al bekend
     await page.getByText("Nieuw").click();
     // Navigeert direct naar spel zonder modal
-    await expect(page).toHaveURL(new RegExp(`^${BASE}/grub`), { timeout: 10000 });
+    await expect(page).toHaveURL(/\/grub/, { timeout: 10000 });
   });
 
   test("P2 joint P1 via 'Join' knop in de lobby", async ({ browser }) => {
@@ -52,7 +50,7 @@ test.describe("Navigatie", () => {
     expect(roomId).toBeTruthy();
 
     // P2 stelt naam in en gaat naar de lobby (kleine wacht voor lobby-update propageert)
-    await p2.goto(`${BASE}/`);
+    await p2.goto("/");
     await p2.evaluate(() => sessionStorage.setItem("catanja-name", "LobbyGast"));
     await p2.waitForTimeout(500);
     await p2.goto("/lobby?game=grub");
@@ -63,7 +61,7 @@ test.describe("Navigatie", () => {
     await p2.getByRole("button", { name: "Join" }).first().click();
 
     // P2 navigeert naar het spel
-    await expect(p2).toHaveURL(new RegExp(`^${BASE}/grub`), { timeout: 10000 });
+    await expect(p2).toHaveURL(/\/grub/, { timeout: 10000 });
     expect(new URL(p2.url()).searchParams.get("room")).toBe(roomId);
 
     // P1 overgaat van wachten naar spelen
@@ -82,13 +80,13 @@ test.describe("Navigatie", () => {
     const p3 = await ctx3.newPage();
 
     const roomId = await createWaitingRoom(p1, "NavHost");
-    await p2.goto(`${BASE}/`);
+    await p2.goto("/");
     await p2.evaluate(() => sessionStorage.setItem("catanja-name", "NavGast"));
     await p2.goto(`/grub?room=${roomId}`);
     await p2.waitForTimeout(800);
 
     // P3 navigeert direct naar het actieve spel als spectator
-    await p3.goto(`${BASE}/`);
+    await p3.goto("/");
     await p3.evaluate(() => sessionStorage.setItem("catanja-name", "NavKijker"));
     await p3.goto(`/grub?room=${roomId}`);
 
